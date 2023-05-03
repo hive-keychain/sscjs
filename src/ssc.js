@@ -16,6 +16,7 @@ export default class SSC {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
+        'Connection':'keep-alive'
       }
     });
 
