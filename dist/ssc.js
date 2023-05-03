@@ -824,6 +824,7 @@
       });
 
       this.id = 1;
+      this.timeoutId = null;
     }
 
     /**
@@ -1079,7 +1080,7 @@
                   }
 
                   if (endBlock === null || endBlock && nextBlock <= endBlock) {
-                    setTimeout(function () {
+                    this.timeoutId = setTimeout(function () {
                       _this2.streamFromTo(nextBlock, endBlock, callback, pollingTime);
                     }, pollingTime);
                   }
@@ -1091,7 +1092,7 @@
                   _context.t0 = _context['catch'](0);
 
                   callback(_context.t0, null);
-                  setTimeout(function () {
+                  this.timeoutId = setTimeout(function () {
                     _this2.streamFromTo(startBlock, endBlock, callback, pollingTime);
                   }, pollingTime);
 
@@ -1152,6 +1153,11 @@
 
         return stream;
       }()
+    }, {
+      key: 'cancelStream',
+      value: function cancelStream() {
+        clearTimeout(this.timeoutId);
+      }
     }]);
     return SSC;
   }();
