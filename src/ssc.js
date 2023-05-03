@@ -20,6 +20,7 @@ export default class SSC {
     });
 
     this.id = 1;
+    this.timeoutId = null;
   }
 
   /**
@@ -216,13 +217,13 @@ export default class SSC {
       }
       
       if (endBlock === null || (endBlock && nextBlock <= endBlock)) {
-        setTimeout(() => {
+        this.timeoutId = setTimeout(() => {
           this.streamFromTo(nextBlock, endBlock, callback, pollingTime);
         }, pollingTime)
       }
     } catch (err) {
       callback(err, null);
-      setTimeout(() => {
+      this.timeoutId = setTimeout(() => {
         this.streamFromTo(startBlock, endBlock, callback, pollingTime);
       }, pollingTime)
     }
@@ -237,5 +238,9 @@ export default class SSC {
     const { blockNumber } = await this.getLatestBlockInfo();
     
     this.streamFromTo(blockNumber, null, callback, pollingTime);
+  }
+
+  cancelStream() {
+    clearTimeout(this.timeoutId);
   }
 };
