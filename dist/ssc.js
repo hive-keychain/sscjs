@@ -823,7 +823,7 @@
           'Connection': 'keep-alive'
         }
       });
-
+      this.timeout = timeout;
       this.id = 1;
       this.timeoutId = null;
     }
@@ -1075,34 +1075,44 @@
                   res = _context.sent;
                   nextBlock = startBlock;
 
-                  if (res !== null) {
-                    callback(null, res);
-                    nextBlock += 1;
+                  if (!(res !== null)) {
+                    _context.next = 9;
+                    break;
                   }
+
+                  _context.next = 8;
+                  return callback(null, res);
+
+                case 8:
+                  nextBlock += 1;
+
+                case 9:
 
                   if (endBlock === null || endBlock && nextBlock <= endBlock) {
                     this.timeoutId = setTimeout(function () {
                       _this2.streamFromTo(nextBlock, endBlock, callback, pollingTime);
                     }, pollingTime);
                   }
-                  _context.next = 13;
+                  _context.next = 17;
                   break;
 
-                case 9:
-                  _context.prev = 9;
+                case 12:
+                  _context.prev = 12;
                   _context.t0 = _context['catch'](0);
+                  _context.next = 16;
+                  return callback(_context.t0, null);
 
-                  callback(_context.t0, null);
+                case 16:
                   this.timeoutId = setTimeout(function () {
                     _this2.streamFromTo(startBlock, endBlock, callback, pollingTime);
                   }, pollingTime);
 
-                case 13:
+                case 17:
                 case 'end':
                   return _context.stop();
               }
             }
-          }, _callee, this, [[0, 9]]);
+          }, _callee, this, [[0, 12]]);
         }));
 
         function streamFromTo(_x13) {
@@ -1154,6 +1164,30 @@
 
         return stream;
       }()
+
+      /**
+       * Update dynamically the RPC without creating a new instance
+       * @param {Function} newRpcNodeUrl callback called everytime a block is retrieved
+       */
+
+    }, {
+      key: 'updateNode',
+      value: function updateNode(newRpcNodeUrl) {
+        this.axios.create({
+          baseURL: newRpcNodeUrl,
+          timeout: this.timeout,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Connection': 'keep-alive'
+          }
+        });
+      }
+
+      /**
+       * Stop the stream
+       */
+
     }, {
       key: 'cancelStream',
       value: function cancelStream() {

@@ -19,7 +19,7 @@ export default class SSC {
         'Connection':'keep-alive'
       }
     });
-
+    this.timeout = timeout;
     this.id = 1;
     this.timeoutId = null;
   }
@@ -213,7 +213,7 @@ export default class SSC {
       const res = await this.getBlockInfo(startBlock);
       let nextBlock = startBlock;
       if (res !== null) {
-        callback(null, res);
+        await callback(null, res);
         nextBlock += 1;
       }
       
@@ -223,7 +223,7 @@ export default class SSC {
         }, pollingTime)
       }
     } catch (err) {
-      callback(err, null);
+      await callback(err, null);
       this.timeoutId = setTimeout(() => {
         this.streamFromTo(startBlock, endBlock, callback, pollingTime);
       }, pollingTime)
@@ -241,6 +241,25 @@ export default class SSC {
     this.streamFromTo(blockNumber, null, callback, pollingTime);
   }
 
+  /**
+   * Update dynamically the RPC without creating a new instance
+   * @param {Function} newRpcNodeUrl callback called everytime a block is retrieved
+   */
+  updateNode(newRpcNodeUrl) {
+    this.axios.create({
+      baseURL: newRpcNodeUrl,
+      timeout: this.timeout,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Connection':'keep-alive'
+      }
+    });
+  }
+
+  /**
+   * Stop the stream
+   */
   cancelStream() {
     clearTimeout(this.timeoutId);
   }
