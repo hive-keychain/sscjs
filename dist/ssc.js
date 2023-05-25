@@ -1173,7 +1173,7 @@
     }, {
       key: 'updateNode',
       value: function updateNode(newRpcNodeUrl) {
-        this.axios.create({
+        this.axios = axios.create({
           baseURL: newRpcNodeUrl,
           timeout: this.timeout,
           headers: {

@@ -246,7 +246,7 @@ export default class SSC {
    * @param {Function} newRpcNodeUrl callback called everytime a block is retrieved
    */
   updateNode(newRpcNodeUrl) {
-    this.axios.create({
+    this.axios = axios.create({
       baseURL: newRpcNodeUrl,
       timeout: this.timeout,
       headers: {
