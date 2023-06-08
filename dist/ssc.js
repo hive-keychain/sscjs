@@ -864,11 +864,15 @@
 
         this.id += 1;
 
-        this.axios.post(endpoint, postData).then(function (response) {
-          callback(null, response.data.result);
-        }).catch(function (error) {
-          callback(error, null);
-        });
+        try {
+          this.axios.post(endpoint, postData).then(function (response) {
+            callback(null, response.data.result);
+          }).catch(function (error) {
+            callback(error, null);
+          });
+        } catch (err) {
+          callback('Node non reachable', null);
+        }
       }
 
       /**
@@ -891,11 +895,15 @@
         this.id += 1;
 
         return new Promise(function (resolve, reject) {
-          _this.axios.post(endpoint, postData).then(function (response) {
-            resolve(response.data.result);
-          }).catch(function (error) {
-            reject(error);
-          });
+          try {
+            _this.axios.post(endpoint, postData).then(function (response) {
+              resolve(response.data.result);
+            }).catch(function (error) {
+              reject(error);
+            });
+          } catch (err) {
+            reject(err);
+          }
         });
       }
 
