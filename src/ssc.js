@@ -54,13 +54,17 @@ export default class SSC {
 
     this.id += 1;
 
-    this.axios.post(endpoint, postData)
-      .then((response) => {
-        callback(null, response.data.result);
-      })
-      .catch((error) => {
-        callback(error, null);
-      });
+    try {
+      this.axios.post(endpoint, postData)
+        .then((response) => {
+          callback(null, response.data.result);
+        })
+        .catch((error) => {
+          callback(error, null);
+        });
+    } catch(err){
+      callback('Node non reachable', null)
+    }
   }
 
   /**
@@ -79,13 +83,18 @@ export default class SSC {
     this.id += 1;
 
     return new Promise((resolve, reject) => {
-      this.axios.post(endpoint, postData)
+      try {
+        this.axios.post(endpoint, postData)
         .then((response) => {
           resolve(response.data.result);
         })
         .catch((error) => {
           reject(error);
         });
+      }
+      catch(err){
+        reject(err);
+      }
     });
   }
 
