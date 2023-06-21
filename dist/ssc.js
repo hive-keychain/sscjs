@@ -826,6 +826,7 @@
       this.timeout = timeout;
       this.id = 1;
       this.timeoutId = null;
+      this.forceStopStream = false;
     }
 
     /**
@@ -1097,9 +1098,11 @@
                 case 9:
 
                   if (endBlock === null || endBlock && nextBlock <= endBlock) {
-                    this.timeoutId = setTimeout(function () {
-                      _this2.streamFromTo(nextBlock, endBlock, callback, pollingTime);
-                    }, pollingTime);
+                    if (!this.forceStopStream) {
+                      this.timeoutId = setTimeout(function () {
+                        _this2.streamFromTo(nextBlock, endBlock, callback, pollingTime);
+                      }, pollingTime);
+                    }
                   }
                   _context.next = 17;
                   break;
@@ -1199,6 +1202,7 @@
     }, {
       key: 'cancelStream',
       value: function cancelStream() {
+        this.forceStopStream = true;
         clearTimeout(this.timeoutId);
       }
     }]);
