@@ -22,6 +22,7 @@ export default class SSC {
     this.timeout = timeout;
     this.id = 1;
     this.timeoutId = null;
+    this.forceStopStream = false; 
   }
 
   /**
@@ -227,9 +228,11 @@ export default class SSC {
       }
       
       if (endBlock === null || (endBlock && nextBlock <= endBlock)) {
-        this.timeoutId = setTimeout(() => {
-          this.streamFromTo(nextBlock, endBlock, callback, pollingTime);
-        }, pollingTime)
+        if(!this.forceStopStream){
+          this.timeoutId = setTimeout(() => {
+            this.streamFromTo(nextBlock, endBlock, callback, pollingTime);
+          }, pollingTime)
+        }
       }
     } catch (err) {
       await callback(err, null);
@@ -270,6 +273,7 @@ export default class SSC {
    * Stop the stream
    */
   cancelStream() {
+    this.forceStopStream = true;
     clearTimeout(this.timeoutId);
   }
 };
