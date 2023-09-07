@@ -1,28 +1,38 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 const BLOCKCHAIN_API = 'blockchain';
 const CONTRACTAPI = 'contracts';
 
 export default class SSC {
+  axios: AxiosInstance;
+  timeout: number;
+  id: number;
+  timeoutId;
+  forceStopStream: boolean;
+  rpcs: string[];
+  rpcIndex: number;
+
   /**
    * send a JSON RPC request
-   * @param {String} rpcNodeUrl the url of the JSON RPC node
+   * @param {String[]} rpcNodeUrls the url of the JSON RPC node
    * @param {Number} timeout timeout after which the request is aborted, default 15 secs
    */
-  constructor(rpcNodeUrl, timeout = 15000) {
+  constructor(rpcNodeUrls: string[], timeout = 15000) {
     this.axios = axios.create({
-      baseURL: rpcNodeUrl,
+      baseURL: rpcNodeUrls[0],
       timeout,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Connection':'keep-alive'
-      }
+        Connection: 'keep-alive',
+      },
     });
     this.timeout = timeout;
     this.id = 1;
     this.timeoutId = null;
-    this.forceStopStream = false; 
+    this.forceStopStream = false;
+    this.rpcs = rpcNodeUrls;
+    this.rpcIndex = 0;
   }
 
   /**
@@ -31,8 +41,7 @@ export default class SSC {
    * @param {JSON} request request
    * @param {Function} callback callback called after the request is sent if passed (a promise is returned otherwise)
    */
-  send(endpoint, request, callback) {
-
+  send(endpoint: string, request: object, callback: Function) {
     if (callback) {
       this.sendWithCallback(endpoint, request, callback);
     }
@@ -45,8 +54,9 @@ export default class SSC {
    * @param {String} endpoint endpoint
    * @param {JSON} request request
    * @param {Function} callback callback called after the request is sent
+   * @param {number} retry number of retries
    */
-  sendWithCallback(endpoint, request, callback) {
+  sendWithCallback(endpoint: string, request: object, callback: Function, retry = 0) {
     const postData = {
       jsonrpc: '2.0',
       id: this.id,
@@ -56,15 +66,22 @@ export default class SSC {
     this.id += 1;
 
     try {
-      this.axios.post(endpoint, postData)
+      this.axios
+        .post(endpoint, postData)
         .then((response) => {
           callback(null, response.data.result);
         })
         .catch((error) => {
-          callback(error, null);
+          if (retry < this.rpcs.length) {
+            this.useNextRPCNode();
+            return this.sendWithCallback(endpoint, request, callback, retry + 1);
+          } else callback(error, null);
         });
-    } catch(err){
-      callback('Node non reachable', null)
+    } catch (err) {
+      if (retry < this.rpcs.length) {
+        this.useNextRPCNode();
+        return this.sendWithCallback(endpoint, request, callback, retry + 1);
+      } else callback('Node non reachable', null);
     }
   }
 
@@ -72,9 +89,10 @@ export default class SSC {
    * send a JSON RPC request, return a promise
    * @param {String} endpoint endpoint
    * @param {JSON} request request
+   * @param {number} retry number of retries
    * @returns {Promise<JSON>} returns a promise
    */
-  sendWithPromise(endpoint, request) {
+  sendWithPromise(endpoint: string, request: object, retry = 0) {
     const postData = {
       jsonrpc: '2.0',
       id: this.id,
@@ -85,16 +103,22 @@ export default class SSC {
 
     return new Promise((resolve, reject) => {
       try {
-        this.axios.post(endpoint, postData)
-        .then((response) => {
-          resolve(response.data.result);
-        })
-        .catch((error) => {
-          reject(error);
-        });
-      }
-      catch(err){
-        reject(err);
+        this.axios
+          .post(endpoint, postData)
+          .then((response) => {
+            resolve(response.data.result);
+          })
+          .catch((error) => {
+            if (retry < this.rpcs.length) {
+              this.useNextRPCNode();
+              return this.sendWithPromise(endpoint, request, retry + 1);
+            } else reject(error);
+          });
+      } catch (err) {
+        if (retry < this.rpcs.length) {
+          this.useNextRPCNode();
+          return this.sendWithPromise(endpoint, request, retry + 1);
+        } else reject(err);
       }
     });
   }
@@ -105,11 +129,11 @@ export default class SSC {
    * @param {Function} callback callback called if passed
    * @returns {Promise<JSON>} returns a promise if no callback passed
    */
-  getContractInfo(name, callback = null) {
+  getContractInfo(name: string, callback: Function = null) {
     const request = {
-      'method': 'getContract',
-      'params': {
-        name
+      method: 'getContract',
+      params: {
+        name,
       },
     };
 
@@ -124,10 +148,10 @@ export default class SSC {
    * @param {Function} callback callback called if passed
    * @returns {Promise<JSON>} returns a promise if no callback passed
    */
-  findOne(contract, table, query, callback = null) {
+  findOne(contract: string, table: string, query: object, callback: Function = null) {
     const request = {
-      'method': 'findOne',
-      'params': {
+      method: 'findOne',
+      params: {
         contract,
         table,
         query,
@@ -148,10 +172,18 @@ export default class SSC {
    * @param {Function} callback callback called if passed
    * @returns {Promise<JSON>} returns a promise if no callback passed
    */
-  find(contract, table, query, limit = 1000, offset = 0, indexes = [], callback = null) {
+  find(
+    contract: string,
+    table: string,
+    query: object,
+    limit = 1000,
+    offset = 0,
+    indexes: object[] = [],
+    callback: Function = null,
+  ) {
     const request = {
-      'method': 'find',
-      'params': {
+      method: 'find',
+      params: {
         contract,
         table,
         query,
@@ -169,9 +201,9 @@ export default class SSC {
    * @param {Function} callback callback called if passed
    * @returns {Promise<JSON>} returns a promise if no callback passed
    */
-  getLatestBlockInfo(callback = null) {
+  getLatestBlockInfo(callback: Function = null) {
     const request = {
-      'method': 'getLatestBlockInfo',
+      method: 'getLatestBlockInfo',
     };
 
     return this.send(BLOCKCHAIN_API, request, callback);
@@ -183,12 +215,12 @@ export default class SSC {
    * @param {Function} callback callback called if passed
    * @returns {Promise<JSON>} returns a promise if no callback passed
    */
-  getBlockInfo(blockNumber, callback = null) {
+  getBlockInfo(blockNumber: number, callback: Function = null) {
     const request = {
-      'method': 'getBlockInfo',
-      'params': {
-        blockNumber
-      }
+      method: 'getBlockInfo',
+      params: {
+        blockNumber,
+      },
     };
 
     return this.send(BLOCKCHAIN_API, request, callback);
@@ -200,12 +232,12 @@ export default class SSC {
    * @param {Function} callback callback called if passed
    * @returns {Promise<JSON>} returns a promise if no callback passed
    */
-  getTransactionInfo(txid, callback = null) {
+  getTransactionInfo(txid: string, callback: Function = null) {
     const request = {
-      'method': 'getTransactionInfo',
-      'params': {
-        txid
-      }
+      method: 'getTransactionInfo',
+      params: {
+        txid,
+      },
     };
 
     return this.send(BLOCKCHAIN_API, request, callback);
@@ -218,7 +250,12 @@ export default class SSC {
    * @param {Function} callback callback called everytime a block is retrieved
    * @param {Number} pollingTime polling time, default 1 sec
    */
-  async streamFromTo(startBlock, endBlock = null, callback, pollingTime = 1000) {
+  async streamFromTo(
+    startBlock: number,
+    endBlock: number = null,
+    callback: Function,
+    pollingTime = 1000,
+  ) {
     try {
       const res = await this.getBlockInfo(startBlock);
       let nextBlock = startBlock;
@@ -226,19 +263,19 @@ export default class SSC {
         await callback(null, res);
         nextBlock += 1;
       }
-      
+
       if (endBlock === null || (endBlock && nextBlock <= endBlock)) {
-        if(!this.forceStopStream){
+        if (!this.forceStopStream) {
           this.timeoutId = setTimeout(() => {
             this.streamFromTo(nextBlock, endBlock, callback, pollingTime);
-          }, pollingTime)
+          }, pollingTime);
         }
       }
     } catch (err) {
       await callback(err, null);
       this.timeoutId = setTimeout(() => {
         this.streamFromTo(startBlock, endBlock, callback, pollingTime);
-      }, pollingTime)
+      }, pollingTime);
     }
   }
 
@@ -247,25 +284,37 @@ export default class SSC {
    * @param {Function} callback callback called everytime a block is retrieved
    * @param {Number} pollingTime polling time, default 1 sec
    */
-  async stream(callback, pollingTime = 1000) {
+  async stream(callback: Function, pollingTime = 1000) {
     const { blockNumber } = await this.getLatestBlockInfo();
-    
+
     this.streamFromTo(blockNumber, null, callback, pollingTime);
   }
 
   /**
-   * Update dynamically the RPC without creating a new instance
-   * @param {Function} newRpcNodeUrl callback called everytime a block is retrieved
+   * Switch to the next RPC Node
    */
-  updateNode(newRpcNodeUrl) {
+  useNextRPCNode() {
+    let newRpcIndex = this.rpcIndex + 1;
+    if (newRpcIndex >= this.rpcs.length) newRpcIndex = 0;
+    this.rpcIndex = newRpcIndex;
+    const newNode = this.rpcs[this.rpcIndex];
+    this.updateNode(newNode);
+    console.log(`Switching to ${newNode}`);
+  }
+
+  /**
+   * Update dynamically the RPC without creating a new instance
+   * @param {string} newRpcNodeUrl callback called everytime a block is retrieved
+   */
+  updateNode(newRpcNodeUrl: string) {
     this.axios = axios.create({
       baseURL: newRpcNodeUrl,
       timeout: this.timeout,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Connection':'keep-alive'
-      }
+        Connection: 'keep-alive',
+      },
     });
   }
 
@@ -276,4 +325,4 @@ export default class SSC {
     this.forceStopStream = true;
     clearTimeout(this.timeoutId);
   }
-};
+}

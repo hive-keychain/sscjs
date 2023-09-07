@@ -2,10 +2,10 @@
   "name": "sscjs",
   "version": "0.0.9",
   "description": "a light javascript library to interact with the Hive Smart Contracts Sidechain",
-  "main": "lib/ssc.js",
+  "main": "build/ssc.js",
+  "types": "build/ssc.d.ts",
   "files": [
-    "dist",
-    "lib",
+    "build",
     "src"
   ],
   "repository": {
@@ -16,10 +16,7 @@
     "lint": "eslint src tests",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "build:cjs": "cross-env BUILD_TYPE=cjs rollup -c -o lib/ssc.js",
-    "build:umd": "cross-env BUILD_TYPE=umd rollup -c -o dist/ssc.js",
-    "build:umd:min": "cross-env NODE_ENV=production BUILD_TYPE=umd rollup -c -o dist/ssc.min.js",
-    "build": "npm run build:cjs && npm run build:umd && npm run build:umd:min",
+    "build": "tsc -p .",
     "pretest": "npm run build",
     "prepublish": "npm run build"
   },
@@ -30,6 +27,8 @@
     "axios": "1.4.0"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.3",
+    "@types/node": "^20.5.9",
     "babel-core": "^6.26.3",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
@@ -41,11 +40,11 @@
     "eslint-plugin-import": "^2.18.0",
     "eslint-plugin-prettier": "^2.7.0",
     "jest": "^23.6.0",
-    "rollup": "^0.62.0",
     "rollup-plugin-babel": "^3.0.5",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-regenerator": "^0.6.0",
-    "rollup-plugin-uglify": "^4.0.0"
+    "rollup-plugin-uglify": "^4.0.0",
+    "typescript": "^5.2.2"
   },
   "jest": {
     "testRegex": "(/test/.*\\.js)$"
