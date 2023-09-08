@@ -101,12 +101,13 @@ export default class SSC {
     /**
      * Switch to the next RPC Node
      */
-    useNextRPCNode(): void;
+    useNextRPCNode(): Promise<void>;
     /**
      * Update dynamically the RPC without creating a new instance
      * @param {string} newRpcNodeUrl callback called everytime a block is retrieved
      */
-    updateNode(newRpcNodeUrl: string): void;
+    updateNode(newRpcNodeUrl: string): Promise<void>;
+    getRPC(): string;
     /**
      * Stop the stream
      */

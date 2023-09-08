@@ -43,10 +43,9 @@ export default class SSC {
    */
   send(endpoint: string, request: object, callback: Function) {
     if (callback) {
+      console.log('with callback');
       this.sendWithCallback(endpoint, request, callback);
-    }
-
-    return this.sendWithPromise(endpoint, request);
+    } else return this.sendWithPromise(endpoint, request);
   }
 
   /**
@@ -72,15 +71,23 @@ export default class SSC {
           callback(null, response.data.result);
         })
         .catch((error) => {
-          if (retry < this.rpcs.length) {
-            this.useNextRPCNode();
-            return this.sendWithCallback(endpoint, request, callback, retry + 1);
+          // console.log('error there', error);
+
+          if (retry < this.rpcs.length && this.rpcs.length !== 1) {
+            console.log('retry', retry);
+
+            return this.useNextRPCNode().then(() => {
+              return this.sendWithCallback(endpoint, request, callback, retry + 1);
+            });
           } else callback(error, null);
         });
     } catch (err) {
-      if (retry < this.rpcs.length) {
-        this.useNextRPCNode();
-        return this.sendWithCallback(endpoint, request, callback, retry + 1);
+      // console.log('error here', err);
+      if (retry < this.rpcs.length && this.rpcs.length !== 1) {
+        console.log('retry', retry);
+        return this.useNextRPCNode().then(() => {
+          return this.sendWithCallback(endpoint, request, callback, retry + 1);
+        });
       } else callback('Node non reachable', null);
     }
   }
@@ -109,15 +116,23 @@ export default class SSC {
             resolve(response.data.result);
           })
           .catch((error) => {
-            if (retry < this.rpcs.length) {
-              this.useNextRPCNode();
-              return this.sendWithPromise(endpoint, request, retry + 1);
+            // console.log('err h', error);
+            if (retry < this.rpcs.length && this.rpcs.length !== 1) {
+              console.log('retry', retry);
+
+              return this.useNextRPCNode().then(() => {
+                return this.sendWithPromise(endpoint, request, retry + 1);
+              });
             } else reject(error);
           });
       } catch (err) {
-        if (retry < this.rpcs.length) {
-          this.useNextRPCNode();
-          return this.sendWithPromise(endpoint, request, retry + 1);
+        // console.log('er ther', err);
+        if (retry < this.rpcs.length && this.rpcs.length !== 1) {
+          console.log('retry', retry);
+
+          return this.useNextRPCNode().then(() => {
+            return this.sendWithPromise(endpoint, request, retry + 1);
+          });
         } else reject(err);
       }
     });
@@ -293,20 +308,20 @@ export default class SSC {
   /**
    * Switch to the next RPC Node
    */
-  useNextRPCNode() {
+  async useNextRPCNode() {
     let newRpcIndex = this.rpcIndex + 1;
     if (newRpcIndex >= this.rpcs.length) newRpcIndex = 0;
     this.rpcIndex = newRpcIndex;
     const newNode = this.rpcs[this.rpcIndex];
-    this.updateNode(newNode);
-    console.log(`Switching to ${newNode}`);
+    await this.updateNode(newNode);
   }
 
   /**
    * Update dynamically the RPC without creating a new instance
    * @param {string} newRpcNodeUrl callback called everytime a block is retrieved
    */
-  updateNode(newRpcNodeUrl: string) {
+  async updateNode(newRpcNodeUrl: string) {
+    console.log('update to ', newRpcNodeUrl);
     this.axios = axios.create({
       baseURL: newRpcNodeUrl,
       timeout: this.timeout,
@@ -316,6 +331,12 @@ export default class SSC {
         Connection: 'keep-alive',
       },
     });
+    this.rpcIndex = this.rpcs.indexOf(newRpcNodeUrl) || 0;
+    await sleep(1000);
+  }
+
+  getRPC() {
+    return this.rpcs[this.rpcIndex];
   }
 
   /**
@@ -326,3 +347,11 @@ export default class SSC {
     clearTimeout(this.timeoutId);
   }
 }
+
+const sleep = (duration: number): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, duration);
+  });
+};
