@@ -85,7 +85,6 @@ var SSC = /** @class */ (function () {
      */
     SSC.prototype.send = function (endpoint, request, callback) {
         if (callback) {
-            console.log('with callback');
             this.sendWithCallback(endpoint, request, callback);
         }
         else
@@ -113,9 +112,8 @@ var SSC = /** @class */ (function () {
                 // console.log('error there', error);
                 if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
                     console.log('retry', retry);
-                    return _this.useNextRPCNode().then(function () {
-                        return _this.sendWithCallback(endpoint, request, callback, retry + 1);
-                    });
+                    _this.useNextRPCNode();
+                    return _this.sendWithCallback(endpoint, request, callback, retry + 1);
                 }
                 else
                     callback(error, null);
@@ -125,9 +123,8 @@ var SSC = /** @class */ (function () {
             // console.log('error here', err);
             if (retry < this.rpcs.length && this.rpcs.length !== 1) {
                 console.log('retry', retry);
-                return this.useNextRPCNode().then(function () {
-                    return _this.sendWithCallback(endpoint, request, callback, retry + 1);
-                });
+                this.useNextRPCNode();
+                return this.sendWithCallback(endpoint, request, callback, retry + 1);
             }
             else
                 callback('Node non reachable', null);
@@ -155,10 +152,9 @@ var SSC = /** @class */ (function () {
                     .catch(function (error) {
                     // console.log('err h', error);
                     if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
-                        console.log('retry', retry);
-                        return _this.useNextRPCNode().then(function () {
-                            return _this.sendWithPromise(endpoint, request, retry + 1);
-                        });
+                        console.log('retry w p', retry);
+                        _this.useNextRPCNode();
+                        resolve(_this.sendWithPromise(endpoint, request, retry + 1));
                     }
                     else
                         reject(error);
@@ -167,10 +163,9 @@ var SSC = /** @class */ (function () {
             catch (err) {
                 // console.log('er ther', err);
                 if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
-                    console.log('retry', retry);
-                    return _this.useNextRPCNode().then(function () {
-                        return _this.sendWithPromise(endpoint, request, retry + 1);
-                    });
+                    console.log('retry w p c', retry);
+                    _this.useNextRPCNode();
+                    resolve(_this.sendWithPromise(endpoint, request, retry + 1));
                 }
                 else
                     reject(err);
@@ -360,51 +355,29 @@ var SSC = /** @class */ (function () {
      * Switch to the next RPC Node
      */
     SSC.prototype.useNextRPCNode = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var newRpcIndex, newNode;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        newRpcIndex = this.rpcIndex + 1;
-                        if (newRpcIndex >= this.rpcs.length)
-                            newRpcIndex = 0;
-                        this.rpcIndex = newRpcIndex;
-                        newNode = this.rpcs[this.rpcIndex];
-                        return [4 /*yield*/, this.updateNode(newNode)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
+        var newRpcIndex = this.rpcIndex + 1;
+        if (newRpcIndex >= this.rpcs.length)
+            newRpcIndex = 0;
+        this.rpcIndex = newRpcIndex;
+        var newNode = this.rpcs[this.rpcIndex];
+        this.updateNode(newNode);
     };
     /**
      * Update dynamically the RPC without creating a new instance
      * @param {string} newRpcNodeUrl callback called everytime a block is retrieved
      */
     SSC.prototype.updateNode = function (newRpcNodeUrl) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        console.log('update to ', newRpcNodeUrl);
-                        this.axios = axios_1.default.create({
-                            baseURL: newRpcNodeUrl,
-                            timeout: this.timeout,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Access-Control-Allow-Origin': '*',
-                                Connection: 'keep-alive',
-                            },
-                        });
-                        this.rpcIndex = this.rpcs.indexOf(newRpcNodeUrl) || 0;
-                        return [4 /*yield*/, sleep(1000)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
+        console.log('update to ', newRpcNodeUrl);
+        this.axios = axios_1.default.create({
+            baseURL: newRpcNodeUrl,
+            timeout: this.timeout,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                Connection: 'keep-alive',
+            },
         });
+        this.rpcIndex = this.rpcs.indexOf(newRpcNodeUrl) || 0;
     };
     SSC.prototype.getRPC = function () {
         return this.rpcs[this.rpcIndex];
@@ -419,11 +392,4 @@ var SSC = /** @class */ (function () {
     return SSC;
 }());
 exports.default = SSC;
-var sleep = function (duration) {
-    return new Promise(function (resolve, reject) {
-        setTimeout(function () {
-            resolve();
-        }, duration);
-    });
-};
 //# sourceMappingURL=ssc.js.map

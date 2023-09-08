@@ -43,7 +43,6 @@ export default class SSC {
    */
   send(endpoint: string, request: object, callback: Function) {
     if (callback) {
-      console.log('with callback');
       this.sendWithCallback(endpoint, request, callback);
     } else return this.sendWithPromise(endpoint, request);
   }
@@ -76,18 +75,16 @@ export default class SSC {
           if (retry < this.rpcs.length && this.rpcs.length !== 1) {
             console.log('retry', retry);
 
-            return this.useNextRPCNode().then(() => {
-              return this.sendWithCallback(endpoint, request, callback, retry + 1);
-            });
+            this.useNextRPCNode();
+            return this.sendWithCallback(endpoint, request, callback, retry + 1);
           } else callback(error, null);
         });
     } catch (err) {
       // console.log('error here', err);
       if (retry < this.rpcs.length && this.rpcs.length !== 1) {
         console.log('retry', retry);
-        return this.useNextRPCNode().then(() => {
-          return this.sendWithCallback(endpoint, request, callback, retry + 1);
-        });
+        this.useNextRPCNode();
+        return this.sendWithCallback(endpoint, request, callback, retry + 1);
       } else callback('Node non reachable', null);
     }
   }
@@ -99,7 +96,7 @@ export default class SSC {
    * @param {number} retry number of retries
    * @returns {Promise<JSON>} returns a promise
    */
-  sendWithPromise(endpoint: string, request: object, retry = 0) {
+  sendWithPromise(endpoint: string, request: object, retry = 0): Promise<any> {
     const postData = {
       jsonrpc: '2.0',
       id: this.id,
@@ -107,7 +104,6 @@ export default class SSC {
     };
 
     this.id += 1;
-
     return new Promise((resolve, reject) => {
       try {
         this.axios
@@ -118,21 +114,19 @@ export default class SSC {
           .catch((error) => {
             // console.log('err h', error);
             if (retry < this.rpcs.length && this.rpcs.length !== 1) {
-              console.log('retry', retry);
+              console.log('retry w p', retry);
 
-              return this.useNextRPCNode().then(() => {
-                return this.sendWithPromise(endpoint, request, retry + 1);
-              });
+              this.useNextRPCNode();
+              resolve(this.sendWithPromise(endpoint, request, retry + 1));
             } else reject(error);
           });
       } catch (err) {
         // console.log('er ther', err);
         if (retry < this.rpcs.length && this.rpcs.length !== 1) {
-          console.log('retry', retry);
+          console.log('retry w p c', retry);
 
-          return this.useNextRPCNode().then(() => {
-            return this.sendWithPromise(endpoint, request, retry + 1);
-          });
+          this.useNextRPCNode();
+          resolve(this.sendWithPromise(endpoint, request, retry + 1));
         } else reject(err);
       }
     });
@@ -308,19 +302,19 @@ export default class SSC {
   /**
    * Switch to the next RPC Node
    */
-  async useNextRPCNode() {
+  useNextRPCNode() {
     let newRpcIndex = this.rpcIndex + 1;
     if (newRpcIndex >= this.rpcs.length) newRpcIndex = 0;
     this.rpcIndex = newRpcIndex;
     const newNode = this.rpcs[this.rpcIndex];
-    await this.updateNode(newNode);
+    this.updateNode(newNode);
   }
 
   /**
    * Update dynamically the RPC without creating a new instance
    * @param {string} newRpcNodeUrl callback called everytime a block is retrieved
    */
-  async updateNode(newRpcNodeUrl: string) {
+  updateNode(newRpcNodeUrl: string) {
     console.log('update to ', newRpcNodeUrl);
     this.axios = axios.create({
       baseURL: newRpcNodeUrl,
@@ -332,7 +326,6 @@ export default class SSC {
       },
     });
     this.rpcIndex = this.rpcs.indexOf(newRpcNodeUrl) || 0;
-    await sleep(1000);
   }
 
   getRPC() {
@@ -347,11 +340,3 @@ export default class SSC {
     clearTimeout(this.timeoutId);
   }
 }
-
-const sleep = (duration: number): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve();
-    }, duration);
-  });
-};

@@ -19,7 +19,7 @@ export default class SSC {
      * @param {JSON} request request
      * @param {Function} callback callback called after the request is sent if passed (a promise is returned otherwise)
      */
-    send(endpoint: string, request: object, callback: Function): any;
+    send(endpoint: string, request: object, callback: Function): Promise<any>;
     /**
      * send a JSON RPC request with callback
      * @param {String} endpoint endpoint
@@ -35,14 +35,14 @@ export default class SSC {
      * @param {number} retry number of retries
      * @returns {Promise<JSON>} returns a promise
      */
-    sendWithPromise(endpoint: string, request: object, retry?: number): any;
+    sendWithPromise(endpoint: string, request: object, retry?: number): Promise<any>;
     /**
      * Get the information of a contract (owner, source code, etc...)
      * @param {String} name contract name
      * @param {Function} callback callback called if passed
      * @returns {Promise<JSON>} returns a promise if no callback passed
      */
-    getContractInfo(name: string, callback?: Function): any;
+    getContractInfo(name: string, callback?: Function): Promise<any>;
     /**
      * retrieve a record from the table of a contract
      * @param {String} contract contract name
@@ -51,7 +51,7 @@ export default class SSC {
      * @param {Function} callback callback called if passed
      * @returns {Promise<JSON>} returns a promise if no callback passed
      */
-    findOne(contract: string, table: string, query: object, callback?: Function): any;
+    findOne(contract: string, table: string, query: object, callback?: Function): Promise<any>;
     /**
      * retrieve records from the table of a contract
      * @param {String} contract contract name
@@ -63,27 +63,27 @@ export default class SSC {
      * @param {Function} callback callback called if passed
      * @returns {Promise<JSON>} returns a promise if no callback passed
      */
-    find(contract: string, table: string, query: object, limit?: number, offset?: number, indexes?: object[], callback?: Function): any;
+    find(contract: string, table: string, query: object, limit?: number, offset?: number, indexes?: object[], callback?: Function): Promise<any>;
     /**
      * retrieve the latest block info of the sidechain
      * @param {Function} callback callback called if passed
      * @returns {Promise<JSON>} returns a promise if no callback passed
      */
-    getLatestBlockInfo(callback?: Function): any;
+    getLatestBlockInfo(callback?: Function): Promise<any>;
     /**
      * retrieve the specified block info of the sidechain
      * @param {Number} blockNumber block number
      * @param {Function} callback callback called if passed
      * @returns {Promise<JSON>} returns a promise if no callback passed
      */
-    getBlockInfo(blockNumber: number, callback?: Function): any;
+    getBlockInfo(blockNumber: number, callback?: Function): Promise<any>;
     /**
      * retrieve the specified transaction info of the sidechain
      * @param {String} txid transaction id
      * @param {Function} callback callback called if passed
      * @returns {Promise<JSON>} returns a promise if no callback passed
      */
-    getTransactionInfo(txid: string, callback?: Function): any;
+    getTransactionInfo(txid: string, callback?: Function): Promise<any>;
     /**
      * stream part of the sidechain
      * @param {Number} startBlock the first block to retrieve
@@ -101,12 +101,12 @@ export default class SSC {
     /**
      * Switch to the next RPC Node
      */
-    useNextRPCNode(): Promise<void>;
+    useNextRPCNode(): void;
     /**
      * Update dynamically the RPC without creating a new instance
      * @param {string} newRpcNodeUrl callback called everytime a block is retrieved
      */
-    updateNode(newRpcNodeUrl: string): Promise<void>;
+    updateNode(newRpcNodeUrl: string): void;
     getRPC(): string;
     /**
      * Stop the stream
