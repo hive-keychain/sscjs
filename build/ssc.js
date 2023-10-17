@@ -152,7 +152,6 @@ var SSC = /** @class */ (function () {
                     .catch(function (error) {
                     // console.log('err h', error);
                     if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
-                        console.log('retry w p', retry);
                         _this.useNextRPCNode();
                         resolve(_this.sendWithPromise(endpoint, request, retry + 1));
                     }
@@ -163,7 +162,6 @@ var SSC = /** @class */ (function () {
             catch (err) {
                 // console.log('er ther', err);
                 if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
-                    console.log('retry w p c', retry);
                     _this.useNextRPCNode();
                     resolve(_this.sendWithPromise(endpoint, request, retry + 1));
                 }

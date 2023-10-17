@@ -114,8 +114,6 @@ export default class SSC {
           .catch((error) => {
             // console.log('err h', error);
             if (retry < this.rpcs.length && this.rpcs.length !== 1) {
-              console.log('retry w p', retry);
-
               this.useNextRPCNode();
               resolve(this.sendWithPromise(endpoint, request, retry + 1));
             } else reject(error);
@@ -123,8 +121,6 @@ export default class SSC {
       } catch (err) {
         // console.log('er ther', err);
         if (retry < this.rpcs.length && this.rpcs.length !== 1) {
-          console.log('retry w p c', retry);
-
           this.useNextRPCNode();
           resolve(this.sendWithPromise(endpoint, request, retry + 1));
         } else reject(err);
