@@ -111,7 +111,7 @@ var SSC = /** @class */ (function () {
                 .catch(function (error) {
                 // console.log('error there', error);
                 if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
-                    console.log('retry', retry);
+                    console.log('retry catch 1', retry);
                     _this.useNextRPCNode();
                     return _this.sendWithCallback(endpoint, request, callback, retry + 1);
                 }
@@ -122,7 +122,7 @@ var SSC = /** @class */ (function () {
         catch (err) {
             // console.log('error here', err);
             if (retry < this.rpcs.length && this.rpcs.length !== 1) {
-                console.log('retry', retry);
+                console.log('retry catch 2', retry);
                 this.useNextRPCNode();
                 return this.sendWithCallback(endpoint, request, callback, retry + 1);
             }
@@ -150,23 +150,27 @@ var SSC = /** @class */ (function () {
                     resolve(response.data.result);
                 })
                     .catch(function (error) {
-                    // console.log('err h', error);
-                    if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
+                    console.log('send with promise catch1', error);
+                    if (retry < _this.rpcs.length * 2 && _this.rpcs.length !== 1) {
                         _this.useNextRPCNode();
                         resolve(_this.sendWithPromise(endpoint, request, retry + 1));
                     }
-                    else
+                    else {
+                        console.log('out of retries');
                         reject(error);
+                    }
                 });
             }
             catch (err) {
-                // console.log('er ther', err);
-                if (retry < _this.rpcs.length && _this.rpcs.length !== 1) {
+                console.log('send with promise catch2', err);
+                if (retry < _this.rpcs.length * 2 && _this.rpcs.length !== 1) {
                     _this.useNextRPCNode();
                     resolve(_this.sendWithPromise(endpoint, request, retry + 1));
                 }
-                else
+                else {
+                    console.log('out of retries catch 2');
                     reject(err);
+                }
             }
         });
     };
@@ -317,6 +321,7 @@ var SSC = /** @class */ (function () {
                         return [3 /*break*/, 6];
                     case 4:
                         err_1 = _a.sent();
+                        console.log('Error in stream from to', err_1);
                         return [4 /*yield*/, callback(err_1, null)];
                     case 5:
                         _a.sent();
