@@ -112,12 +112,17 @@ export default class SSC {
             resolve(response.data.result);
           })
           .catch((error) => {
-            console.log('send with promise catch1', this.getRPC(), error?.response?.statusText);
+            console.log(
+              'send with promise catch1, retry=',
+              retry,
+              this.getRPC(),
+              error?.response?.statusText,
+            );
             if (retry < this.rpcs.length * 2 && this.rpcs.length !== 1) {
               this.useNextRPCNode();
               resolve(this.sendWithPromise(endpoint, request, retry + 1));
             } else {
-              console.log('out of retries');
+              console.log('out of retries, retry=', retry);
               reject(error);
             }
           });
