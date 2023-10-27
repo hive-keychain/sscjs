@@ -150,7 +150,8 @@ var SSC = /** @class */ (function () {
                     resolve(response.data.result);
                 })
                     .catch(function (error) {
-                    console.log('send with promise catch1', error);
+                    var _a;
+                    console.log('send with promise catch1', _this.getRPC(), (_a = error === null || error === void 0 ? void 0 : error.response) === null || _a === void 0 ? void 0 : _a.statusText);
                     if (retry < _this.rpcs.length * 2 && _this.rpcs.length !== 1) {
                         _this.useNextRPCNode();
                         resolve(_this.sendWithPromise(endpoint, request, retry + 1));

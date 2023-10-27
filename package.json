@@ -1,6 +1,6 @@
 {
   "name": "sscjs",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "a light javascript library to interact with the Hive Smart Contracts Sidechain",
   "main": "build/ssc.js",
   "types": "build/ssc.d.ts",
