@@ -121,8 +121,7 @@ export default class SSC {
               this.useNextRPCNode();
               resolve(this.sendWithPromise(endpoint, request, retry + 1));
             } else {
-              if (this.rpcs.length !== 1)
-                console.log('out of retries, retry=', retry, this, this?.rpcs);
+              if (this.rpcs.length !== 1) console.log('out of retries, retry=', retry, this?.rpcs);
               reject(error);
             }
           });
