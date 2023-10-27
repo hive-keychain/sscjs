@@ -158,7 +158,7 @@ var SSC = /** @class */ (function () {
                     }
                     else {
                         if (_this.rpcs.length !== 1)
-                            console.log('out of retries, retry=', retry, _this, _this === null || _this === void 0 ? void 0 : _this.rpcs);
+                            console.log('out of retries, retry=', retry, _this === null || _this === void 0 ? void 0 : _this.rpcs);
                         reject(error);
                     }
                 });
