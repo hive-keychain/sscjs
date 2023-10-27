@@ -1,6 +1,6 @@
 {
   "name": "sscjs",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "a light javascript library to interact with the Hive Smart Contracts Sidechain",
   "main": "build/ssc.js",
   "types": "build/ssc.d.ts",
@@ -24,7 +24,8 @@
   "author": "harpagon210 <harpagon210@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "axios": "1.4.0"
+    "axios": "1.4.0",
+    "sscjs": "^0.0.9"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.3",

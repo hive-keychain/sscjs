@@ -73,7 +73,7 @@ export default class SSC {
           // console.log('error there', error);
 
           if (retry < this.rpcs.length && this.rpcs.length !== 1) {
-            console.log('retry', retry);
+            console.log('retry catch 1', retry);
 
             this.useNextRPCNode();
             return this.sendWithCallback(endpoint, request, callback, retry + 1);
@@ -82,7 +82,7 @@ export default class SSC {
     } catch (err) {
       // console.log('error here', err);
       if (retry < this.rpcs.length && this.rpcs.length !== 1) {
-        console.log('retry', retry);
+        console.log('retry catch 2', retry);
         this.useNextRPCNode();
         return this.sendWithCallback(endpoint, request, callback, retry + 1);
       } else callback('Node non reachable', null);
@@ -112,18 +112,24 @@ export default class SSC {
             resolve(response.data.result);
           })
           .catch((error) => {
-            // console.log('err h', error);
-            if (retry < this.rpcs.length && this.rpcs.length !== 1) {
+            console.log('send with promise catch1', error);
+            if (retry < this.rpcs.length * 2 && this.rpcs.length !== 1) {
               this.useNextRPCNode();
               resolve(this.sendWithPromise(endpoint, request, retry + 1));
-            } else reject(error);
+            } else {
+              console.log('out of retries');
+              reject(error);
+            }
           });
       } catch (err) {
-        // console.log('er ther', err);
-        if (retry < this.rpcs.length && this.rpcs.length !== 1) {
+        console.log('send with promise catch2', err);
+        if (retry < this.rpcs.length * 2 && this.rpcs.length !== 1) {
           this.useNextRPCNode();
           resolve(this.sendWithPromise(endpoint, request, retry + 1));
-        } else reject(err);
+        } else {
+          console.log('out of retries catch 2');
+          reject(err);
+        }
       }
     });
   }
@@ -277,6 +283,7 @@ export default class SSC {
         }
       }
     } catch (err) {
+      console.log('Error in stream from to', err);
       await callback(err, null);
       this.timeoutId = setTimeout(() => {
         this.streamFromTo(startBlock, endBlock, callback, pollingTime);
