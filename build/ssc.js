@@ -151,13 +151,14 @@ var SSC = /** @class */ (function () {
                 })
                     .catch(function (error) {
                     var _a;
-                    console.log('send with promise catch1, retry=', retry, _this.getRPC(), (_a = error === null || error === void 0 ? void 0 : error.response) === null || _a === void 0 ? void 0 : _a.statusText, _this.rpcs, _this);
+                    console.log('send with promise catch1, retry=', retry, _this.getRPC(), (_a = error === null || error === void 0 ? void 0 : error.response) === null || _a === void 0 ? void 0 : _a.statusText);
                     if (retry < _this.rpcs.length * 2 && _this.rpcs.length !== 1) {
                         _this.useNextRPCNode();
                         resolve(_this.sendWithPromise(endpoint, request, retry + 1));
                     }
                     else {
-                        console.log('out of retries, retry=', retry, _this, _this === null || _this === void 0 ? void 0 : _this.rpcs);
+                        if (_this.rpcs.length !== 1)
+                            console.log('out of retries, retry=', retry, _this, _this === null || _this === void 0 ? void 0 : _this.rpcs);
                         reject(error);
                     }
                 });

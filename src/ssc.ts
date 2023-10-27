@@ -116,14 +116,13 @@ export default class SSC {
               retry,
               this.getRPC(),
               error?.response?.statusText,
-              this.rpcs,
-              this,
             );
             if (retry < this.rpcs.length * 2 && this.rpcs.length !== 1) {
               this.useNextRPCNode();
               resolve(this.sendWithPromise(endpoint, request, retry + 1));
             } else {
-              console.log('out of retries, retry=', retry, this, this?.rpcs);
+              if (this.rpcs.length !== 1)
+                console.log('out of retries, retry=', retry, this, this?.rpcs);
               reject(error);
             }
           });
