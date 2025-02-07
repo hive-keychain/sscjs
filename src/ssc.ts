@@ -115,7 +115,6 @@ export default class SSC {
               'send with promise catch1, retry=',
               retry,
               this.getRPC(),
-              error?.response?.statusText,
             );
             if (retry < this.rpcs.length * 2 && this.rpcs.length !== 1) {
               this.useNextRPCNode();
@@ -126,7 +125,7 @@ export default class SSC {
             }
           });
       } catch (err) {
-        console.log('send with promise catch2', err);
+        console.log('send with promise catch2');
         if (retry < this.rpcs.length * 2 && this.rpcs.length !== 1) {
           this.useNextRPCNode();
           resolve(this.sendWithPromise(endpoint, request, retry + 1));
